@@ -1,0 +1,20 @@
+{
+    "turma": "TGEIO20",
+    "horario": [
+        {
+            "dia": "Segunda",
+            "info": [
+                {
+                    "hora": "08:00",
+                    "disciplina": "CD-5",
+                    "professor": "CG"
+                },
+                {
+                    "hora": "10:00",
+                    "disciplina": "POR",
+                    "professor": "SRS"
+                }
+            ]
+        }
+    ]
+}
