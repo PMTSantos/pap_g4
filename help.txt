@@ -1,0 +1,29 @@
+/horario/turma
+method: get
+Enviar a lista de todas as turmas
+
+/horario/turma/:turma
+method: get
+Enviar os dados tendo em conta a turma no request
+
+/horario/prof
+method: get
+Enviar a lista com todos os professores
+
+/horario/prof/:prof
+method: get 
+Enviar os dados do prof (sala onde está)
+
+/horario/:turma/insert?token=AbCD1234
+method: post
+Receber os dados no body e inserir na db
+
+-------------------------------------------
+
+API auth
+
+/api/auth
+method: get
+Recebe a apiKey da conexão e cria um token para a conexão ser aprovada
+
+

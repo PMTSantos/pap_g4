@@ -1,0 +1,23 @@
+{
+    "turma": "TGEIO20",
+    "versao": "23",
+    "horario": [
+        {
+            "dia": "Segunda",
+            "info": [
+                {
+                    "bloco": "1",
+                    "disciplina": "CD-5",
+                    "professor": "CG",
+                    "sala": "INF3"
+                },
+                {
+                    "bloco": "2",
+                    "disciplina": "POR",
+                    "professor": "SRS",
+                    "sala": "8"
+                }
+            ]
+        }
+    ]
+}
