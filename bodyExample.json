@@ -3,16 +3,16 @@
     "versao": "23",
     "horario": [
         {
-            "dia": "Segunda",
+            "dia": "Quarta",
             "info": [
                 {
-                    "bloco": "1",
+                    "bloco": "3",
                     "disciplina": "CD-4",
                     "professor": "CG",
                     "sala": "INF3"
                 },
                 {
-                    "bloco": "2",
+                    "bloco": "4",
                     "disciplina": "POR",
                     "professor": "SRS",
                     "sala": "8"
