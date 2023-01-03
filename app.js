@@ -213,6 +213,22 @@ app.post("/horario/:turma/insert", verifyAuth, upload.single('horario'), async (
     var sql = "INSERT INTO horario (turma, versao, info, img, active) VALUES (?, ?, ?, ?, 1)";
     await global.db(sql, [turma, JSON.parse(info).versao, info, filePath]);
 
+    sql = `SELECT disciplinas FROM turmas WHERE turma = ?`
+    let data2 = await global.db(sql, [turma])
+    
+    //Falta Testar!!!
+
+    await info.horario.forEach(async dia => {
+        dia.info.forEach(async bloco => {
+            data2[0].disciplinas[bloco.disciplina] += 1
+        })
+    })
+
+    sql = `UPDATE turmas SET disciplinas = ? WHERE turma = ?`
+    await global.db(sql, [data[0].disciplinas, turma])
+
+    //
+
     res.status(200).send({ message: "Horário inserido com sucesso!" });
 
 });
