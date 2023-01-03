@@ -11,16 +11,6 @@ method: get
 Enviar os dados tendo em conta a turma no request
 Funciona
 
-/horario/prof
-method: get
-Enviar a lista com todos os professores
-Funciona
-
-/horario/prof/:prof
-method: get 
-Enviar os dados do prof (sala onde está)
-Funciona
-
 /horario/:turma/insert?token=AbCD1234
 method: post
 Receber os dados no body e inserir na db
