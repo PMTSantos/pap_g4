@@ -44,9 +44,3 @@ CREATE TABLE IF NOT EXISTS apikeys (
     perms VARCHAR(255) NOT NULL, -- "read" or "write"
     PRIMARY KEY (id)
 );
-
-CREATE TABLE IF NOT EXISTS profs (
-    id BIGINT AUTO_INCREMENT,
-    nome VARCHAR(255) NOT NULL,
-    PRIMARY KEY (id)
-);
