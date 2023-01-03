@@ -6,13 +6,11 @@
             "dia": "Quarta",
             "info": [
                 {
-                    "bloco": "3",
                     "disciplina": "CD-4",
                     "professor": "CG",
                     "sala": "INF3"
                 },
                 {
-                    "bloco": "4",
                     "disciplina": "POR",
                     "professor": "SRS",
                     "sala": "8"
