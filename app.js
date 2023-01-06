@@ -139,7 +139,6 @@ app.get("/horario/turma/:turma", async (req, res) => {
         });
     });
 
-<<<<<<< HEAD
     for (const disciplina in disciplinas) {
         var sql = "SELECT * FROM main WHERE t = ? AND m = ?";
         let data = await global.db(sql, [turma, disciplina]);
@@ -160,8 +159,6 @@ app.get("/horario/turma/:turma", async (req, res) => {
 
     res.status(200).send(dataToSend);
 
-=======
->>>>>>> 9970475747807c1ec9488cafff0e8f13a48df43e
 });
 
 app.post("/horario/:turma/insert", verifyAuth, upload.single('horario'), async (req, res) => {
