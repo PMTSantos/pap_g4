@@ -139,6 +139,7 @@ app.get("/horario/turma/:turma", async (req, res) => {
         });
     });
 
+<<<<<<< HEAD
     for (const disciplina in disciplinas) {
         var sql = "SELECT * FROM main WHERE t = ? AND m = ?";
         let data = await global.db(sql, [turma, disciplina]);
@@ -159,6 +160,8 @@ app.get("/horario/turma/:turma", async (req, res) => {
 
     res.status(200).send(dataToSend);
 
+=======
+>>>>>>> 9970475747807c1ec9488cafff0e8f13a48df43e
 });
 
 app.post("/horario/:turma/insert", verifyAuth, upload.single('horario'), async (req, res) => {
@@ -199,6 +202,22 @@ app.post("/horario/:turma/insert", verifyAuth, upload.single('horario'), async (
             }
         })
     })
+
+    sql = `SELECT disciplinas FROM turmas WHERE turma = ?`
+    let data2 = await global.db(sql, [turma])
+    
+    //Falta Testar!!!
+
+    await info.horario.forEach(async dia => {
+        dia.info.forEach(async bloco => {
+            data2[0].disciplinas[bloco.disciplina] += 1
+        })
+    })
+
+    sql = `UPDATE turmas SET disciplinas = ? WHERE turma = ?`
+    await global.db(sql, [data[0].disciplinas, turma])
+
+    //
 
     res.status(200).send({ message: "Horário inserido com sucesso!" });
 
