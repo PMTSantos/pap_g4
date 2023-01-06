@@ -12,6 +12,7 @@ const multer = require('multer');
 const session = require('express-session');
 const crypto = require('crypto');
 const path = require('path');
+const { Console } = require("console");
 
 var storage = multer.diskStorage(
     {
@@ -33,7 +34,7 @@ app.use('/assets', express.static(path.join(__dirname, 'horarios')))
 
 app.use(session({
     resave: false,
-    saveUninitialized: false, 
+    saveUninitialized: false,
     secret: 's%3Al3ozSdvQ83TtC5RvJ.CibaQoHtaY0H3QOB1kqR8H2A',
     cookie: {
         expires: 3600000
@@ -95,10 +96,28 @@ app.get("/api/auth", async (req, res, next) => {
 
 app.get("/horario/turma", async (req, res) => {
 
-    var sql = "SELECT * FROM turmas";
+    let { ano } = req.body;
+
+    let anoSystem = new Date().getFullYear();
+    let mesSystem = new Date().getMonth();
+
+    if (!ano) return res.status(400).send({ message: "É necessário especificar o ano!" });
+
+    console.log(mesSystem)
+
+    if (mesSystem >= 6) anoSystem;
+    else anoSystem--;
+
+    if (ano == 1) ano = String(anoSystem).slice(2);
+    if (ano == 2) ano = String(anoSystem - 1).slice(2);
+    if (ano == 3) ano = String(anoSystem - 2).slice(2);
+
+    console.log(ano)
+
+    var sql = `SELECT * FROM turmas WHERE turma LIKE '%${ano}'`;
     let data = await global.db(sql);
 
-    if (!data[0]) return res.status(404).send({ message: "Naõ existem turmas!" });
+    if (!data[0]) return res.status(404).send({ message: "Não existem turmas!" });
 
     res.status(200).send(data);
 });
@@ -107,96 +126,45 @@ app.get("/horario/turma/:turma", async (req, res) => {
 
     const { turma } = req.params;
 
-    var sql = "SELECT * FROM horario WHERE turma = ? AND active = 1";
+    var sql = "SELECT img, info FROM horario WHERE turma = ? AND active = 1";
     let data = await global.db(sql, [turma]);
 
     if (!data[0]) return res.status(404).send({ message: "Turma não encontrada!" });
 
-    res.status(200).send(data);
+    let disciplinas = {};
+    let info = data[0].info;
+    await info.horario.forEach(dia => {
+        dia.info.forEach(bloco => {
+            if (!disciplinas[bloco.disciplina]) disciplinas[bloco.disciplina] = 0;
+        });
+    });
 
-});
-
-app.get("/horario/prof", async (req, res) => {
-
-    var sql = "SELECT nome FROM profs";
-    let data = await global.db(sql);
-
-    if (!data[0]) return res.status(404).send({ message: "Não foram encontrados horários!" });
-
-    res.status(200).send(data);
-
-});
-
-app.get("/horario/prof/:prof", async (req, res) => {
-
-    const { prof } = req.params;
-
-    var sql = "SELECT info FROM horario WHERE active = 1";
-    let data = await global.db(sql, [prof]);
-
-    let weekday = new Date().toLocaleString('en-us', { weekday: 'long' })
-
-    let hours = new Date().getHours();
-    let minutes = new Date().getMinutes();
-
-    let block = 0;
-    if ((hours == 8 && minutes >= 30) || (hours == 9 && minutes < 30)) block = 1;
-    if ((hours == 9 && minutes >= 30) || (hours == 10 && minutes < 30)) block = 2;
-    if ((hours == 10 && minutes >= 50) || (hours == 11 && minutes < 50)) block = 3;
-    if ((hours == 11 && minutes >= 50) || (hours == 12 && minutes < 50)) block = 4;
-    if ((hours == 12 && minutes >= 55) || (hours == 13 && minutes < 55)) block = 5;
-    if ((hours == 13 && minutes >= 55) || (hours == 14 && minutes < 55)) block = 6;
-    if ((hours == 15 && minutes >= 0) || (hours == 16 && minutes < 0)) block = 7;
-    if ((hours == 16 && minutes >= 0) || (hours == 17 && minutes < 0)) block = 8;
-    if ((hours == 17 && minutes >= 10) || (hours == 18 && minutes < 10)) block = 9;
-    if ((hours == 18 && minutes >= 10) || (hours == 19 && minutes < 10)) block = 10;
-
-    switch (weekday) {
-        case "Monday":
-            weekday = "Segunda";
-            break;
-        case "Tuesday":
-            weekday = "Terça";
-            break;
-        case "Wednesday":
-            weekday = "Quarta";
-            break;
-        case "Thursday":
-            weekday = "Quinta";
-            break;
-        case "Friday":
-            weekday = "Sexta";
-            break;
-        default:
-            weekday = 0;
+    for (const disciplina in disciplinas) {
+        var sql = "SELECT * FROM main WHERE t = ? AND m = ?";
+        let data = await global.db(sql, [turma, disciplina]);
+        disciplinas[disciplina] = data[0].hrsDadas;
     }
 
-    if (weekday == 0) return res.status(404).send({ message: "Hoje não há aulas!" });
+    for (const disciplina in disciplinas) {
+        var sql = "SELECT duracao FROM modulos WHERE modulo = ?";
+        let data = await global.db(sql, [disciplina]);
+        disciplinas[disciplina] = data[0].duracao - disciplinas[disciplina];
+    }
 
-    let answer = 0;
+    let dataToSend = {
+        info: await data[0].info,
+        img: await data[0].img,
+        hrs: disciplinas
+    }
 
-    await data.filter(turma => {
-        turma.info.horario.find(horario => {
-            if (horario.dia == weekday) {
-                horario.info.find(info => {
-                    console.log(info)
-                    if (info.bloco == block && info.professor == prof) {
-                        answer = 1;
-                        return res.status(200).send({ prof, sala: info.sala });
-                    }
-                })
-            }
-        })
-    })
-
-    if (answer == 0) res.status(404).send({ message: "Não foram encontrados dados onde o professor esteja a dar aula!" })
+    res.status(200).send(dataToSend);
 
 });
 
 app.post("/horario/:turma/insert", verifyAuth, upload.single('horario'), async (req, res) => {
 
     const { turma } = req.params;
-    let info = req.body.data;
+    let info = JSON.parse(req.body.data);
 
     var sql = "SELECT * FROM turmas WHERE turma = ?";
     let data = await global.db(sql, [turma]);
@@ -210,8 +178,27 @@ app.post("/horario/:turma/insert", verifyAuth, upload.single('horario'), async (
 
     let filePath = 'http://localhost:3000/assets/' + req.file.filename;
 
-    var sql = "INSERT INTO horario (turma, versao, info, img, active) VALUES (?, ?, ?, ?, 1)";
-    await global.db(sql, [turma, JSON.parse(info).versao, info, filePath]);
+    var sql = "UPDATE horario SET active = 0 WHERE turma = ?";
+    await global.db(sql, [turma]);
+
+    var sql = "INSERT INTO horario (turma, info, img, active) VALUES (?, ?, ?, 1)";
+    await global.db(sql, [turma, JSON.stringify(info), filePath]);
+
+    info.horario.forEach(async dia => {
+        dia.info.forEach(async bloco => {
+
+            var sql = "SELECT * FROM main WHERE t = ? and m = ?"
+            let data = await global.db(sql, [turma, bloco.disciplina]);
+
+            if (!data[0]) {
+                var sql = "INSERT INTO main (t, m, hrsDadas) VALUES (?, ?, ?)";
+                await global.db(sql, [turma, bloco.disciplina, 1]);
+            } else {
+                var sql = "UPDATE main SET hrsDadas = hrsDadas + 1 WHERE t = ? and m = ?";
+                await global.db(sql, [turma, bloco.disciplina]);
+            }
+        })
+    })
 
     res.status(200).send({ message: "Horário inserido com sucesso!" });
 
