@@ -110,16 +110,12 @@ app.get("/horario/turma", async (req, res) => {
 
     if (!ano) return res.status(400).send({ message: "É necessário especificar o ano!" });
 
-    console.log(mesSystem)
-
     if (mesSystem >= 6) anoSystem;
     else anoSystem--;
 
     if (ano == 1) ano = String(anoSystem).slice(2);
     if (ano == 2) ano = String(anoSystem - 1).slice(2);
     if (ano == 3) ano = String(anoSystem - 2).slice(2);
-
-    console.log(ano)
 
     var sql = `SELECT * FROM turmas WHERE turma LIKE '%${ano}'`;
     let data = await global.db(sql);
