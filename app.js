@@ -12,7 +12,10 @@ const multer = require('multer');
 const session = require('express-session');
 const crypto = require('crypto');
 const path = require('path');
-const { Console } = require("console");
+var https = require('https');
+const antiCrash = require('./handlers/anticrash.js');
+
+antiCrash();
 
 var storage = multer.diskStorage(
     {
@@ -50,9 +53,13 @@ global.db = (sql, values) => {
     });
 }
 
-app.listen(3000, () => {
-    console.log("Server running on port 3000");
-});
+var privateKey = fs.readFileSync(__dirname + '/ssl/private.key', 'utf8');
+var certificate = fs.readFileSync(__dirname + '/ssl/certificate.crt', 'utf8');
+
+var credentials = { key: privateKey, cert: certificate };
+
+var httpsServer = https.createServer(credentials, app);
+httpsServer.listen(8443)
 
 const verifyAuth = (req, res, next) => {
     const { token } = req.query;
@@ -96,7 +103,7 @@ app.get("/api/auth", async (req, res, next) => {
 
 app.get("/horario/turma", async (req, res) => {
 
-    let { ano } = req.body;
+    let { ano } = req.query;
 
     let anoSystem = new Date().getFullYear();
     let mesSystem = new Date().getMonth();
@@ -119,7 +126,12 @@ app.get("/horario/turma", async (req, res) => {
 
     if (!data[0]) return res.status(404).send({ message: "Não existem turmas!" });
 
-    res.status(200).send(data);
+    let turmas = [];
+    data.forEach(turma => {
+        turmas.push(turma.turma);
+    });
+
+    res.status(200).send(turmas);
 });
 
 app.get("/horario/turma/:turma", async (req, res) => {
@@ -176,7 +188,7 @@ app.post("/horario/:turma/insert", verifyAuth, upload.single('horario'), async (
 
     if (data1[0]) return res.status(404).send({ message: "Já existe um horário para esta turma!" });
 
-    let filePath = 'http://localhost:3000/assets/' + req.file.filename;
+    let filePath = 'https:/apphorarios.pt/assets/' + req.file.filename;
 
     var sql = "UPDATE horario SET active = 0 WHERE turma = ?";
     await global.db(sql, [turma]);
@@ -199,22 +211,6 @@ app.post("/horario/:turma/insert", verifyAuth, upload.single('horario'), async (
             }
         })
     })
-
-    sql = `SELECT disciplinas FROM turmas WHERE turma = ?`
-    let data2 = await global.db(sql, [turma])
-    
-    //Falta Testar!!!
-
-    await info.horario.forEach(async dia => {
-        dia.info.forEach(async bloco => {
-            data2[0].disciplinas[bloco.disciplina] += 1
-        })
-    })
-
-    sql = `UPDATE turmas SET disciplinas = ? WHERE turma = ?`
-    await global.db(sql, [data[0].disciplinas, turma])
-
-    //
 
     res.status(200).send({ message: "Horário inserido com sucesso!" });
 
