@@ -159,10 +159,17 @@ app.get("/horario/turma/:turma", async (req, res) => {
         disciplinas[disciplina] = data[0].duracao - disciplinas[disciplina];
     }
 
+    let final = [];
+
+    for (const disciplina in disciplinas) {
+        let string = disciplina + "->" + disciplinas[disciplina] + "h";
+        final.push(string);
+    }
+
     let dataToSend = {
         info: await data[0].info,
         img: await data[0].img,
-        hrs: disciplinas
+        hrs: final
     }
 
     res.status(200).send(dataToSend);
