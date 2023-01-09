@@ -61,15 +61,21 @@ var credentials = { key: privateKey, cert: certificate };
 var httpsServer = https.createServer(credentials, app);
 httpsServer.listen(8443)
 
-const verifyAuth = (req, res, next) => {
+const verifyAuth = async (req, res, next) => {
     const { token } = req.query;
 
-    if (req.session.user.token == token) {
-        next();
+    if (req.session.user != (null || undefined)) {
+        if (req.session.user.token == token)
+            next();
     } else {
-        res.status(401).send({
-            message: "Não estás autenticado! Ou o token enviado está incorreto"
-        });
+        var sql = "SELECT token FROM apikeys WHERE apiKEY = ? AND token = ?"
+        let data = await global.db(sql, [req.session.user.apiKey, token]);
+
+        if (data[0]) next();
+        else
+            res.status(401).send({
+                message: "Não estás autenticado! Ou o token enviado está incorreto"
+            });
     }
 }
 
@@ -90,8 +96,15 @@ app.get("/api/auth", async (req, res, next) => {
         token: value
     }
 
-    setTimeout(() => {
+    var sql = "UPDATE apikeys SET token = ? WHERE apiKEY = ?";
+    await global.db(sql, [value, apiKey]);
+
+    setTimeout(async () => {
         delete req.session.user;
+
+        var sql = "UPDATE apikeys SET token = ? WHERE api = ?";
+        await global.db(sql, [null, apiKey]);
+
     }, 900000);//15 minutos
 
     res.status(200).send({
