@@ -14,6 +14,7 @@ const crypto = require('crypto');
 const path = require('path');
 var https = require('https');
 const antiCrash = require('./handlers/anticrash.js');
+const fs = require('fs');
 
 antiCrash();
 
